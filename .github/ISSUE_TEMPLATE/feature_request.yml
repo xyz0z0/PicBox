@@ -1,0 +1,31 @@
+name: 功能建议
+description: 为 PicBox 提出新功能或体验改进建议
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢为 PicBox 提出改进建议！请尽量说明使用场景与预期效果，方便评估是否符合项目定位。
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 使用场景 / 要解决的问题
+      description: 当前遇到了什么限制或不便？希望在什么场景下使用该功能？
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 期望的方案
+      description: 描述你期望的行为、界面交互或配置方式。
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 替代方案或补充说明
+      description: 是否考虑过其他实现方式？如有参考或附加背景请在此补充。

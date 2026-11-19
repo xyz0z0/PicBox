@@ -69,8 +69,9 @@ systemctl cat picbox
 
 ## 3. 首次安装（检查全部通过后才写系统路径）
 
-安装动作全部由管理员手工完成：构建脚本不会执行 `sudo`、`systemctl`、远程脚本或发布动作，
-本说明也不提供自动安装器。
+下方列出手工安装的每一步；构建脚本不会执行 `sudo`、`systemctl` 或远程发布动作。
+如需自动完成校验、建号与 systemd 配置，也可使用仓库内的 [`scripts/install.sh`](../scripts/install.sh)
+（升级时传 `--upgrade`）。
 
 ```sh
 # 3.1 专用账号与持久化目录（模板默认使用 /var/lib/picbox）

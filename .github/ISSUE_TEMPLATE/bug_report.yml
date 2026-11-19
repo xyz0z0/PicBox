@@ -1,0 +1,56 @@
+name: Bug 报告
+description: 反馈 PicBox 使用或构建中遇到的问题
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢提交 Bug 报告！提交前请先搜索是否已有相同 Issue。
+        **安全漏洞请勿在此提交**，请前往 [Security Advisories](https://github.com/xyz0z0/PicBox/security/advisories/new) 私密报告。
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述
+      description: 简明清晰地描述遇到了什么问题，以及预期行为是什么。
+      placeholder: 例如：在执行某操作时返回 500，预期应该正常返回...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤
+      description: 列出可以稳定复现该问题的操作步骤。
+      placeholder: |
+        1. 启动 `./picbox`
+        2. 访问 `/dashboard` 并执行 ...
+        3. 观察到报错 ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 报错日志或截图
+      description: 如适用，请粘贴服务端日志、浏览器控制台输出或接口响应（请脱敏密钥、Cookie 等敏感信息）。
+      render: shell
+
+  - type: input
+    id: version
+    attributes:
+      label: PicBox 版本
+      description: 请运行 `picbox --version` 或提供对应的 Git 提交哈希。
+      placeholder: 例如：0.0.1 或 commit abc1234
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: 运行环境
+      description: 操作系统、架构、部署方式（原生二进制 / systemd / Docker）及浏览器（如涉及界面）。
+      placeholder: 例如：Ubuntu 24.04 amd64、systemd 原生部署、Chrome 130
+    validations:
+      required: true

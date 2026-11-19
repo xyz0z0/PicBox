@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 报告安全漏洞（Security Advisories）
+    url: https://github.com/xyz0z0/PicBox/security/advisories/new
+    about: 如发现安全漏洞，请勿公开创建 Issue，点击此处私密报告。

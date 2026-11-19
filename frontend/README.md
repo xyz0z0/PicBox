@@ -25,7 +25,7 @@ npx -y pnpm@10 run check:dist              # 产物断言（见下）
 npx -y pnpm@10 verify                      # = 以上四步
 ```
 
-前端改动（含 `app/**`、`lib/**`、`src/**` 与 `package.json` 的 `0.0.1` 版本号）之后必须重新
+前端改动（含 `app/**`、`lib/**`、`src/**` 与 `package.json` 的 `0.1.0` 版本号）之后必须重新
 `pnpm verify` 并提交 `dist/`，否则 Go 二进制会嵌入陈旧 UI。Go CI（`.github/workflows/go.yml`）
 会安装 Node 24 + pnpm 10、以 `--frozen-lockfile` 只安装本目录依赖、运行 `pnpm verify`
 （类型检查、离线行为测试、重建、产物断言），并用

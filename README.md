@@ -8,7 +8,7 @@ Node、Go、SQLite 服务、Docker 或图片处理库。Go 只在构建期使用
 - **可找回、可打包**：软删除进回收站（默认保留 30 天），流式 ZIP 导出带 `manifest.json`。
 - **单二进制**：HTTP 服务、HTTP 静态资源、SQLite（modernc，pure Go）与 WebP 缩略图（pure Go）都在一个进程里。
 
-当前源码版本为 **0.0.1**（首个发布版本）。构建身份以 `picbox --version` 为准。
+当前源码版本为 **0.1.0**。构建身份以 `picbox --version` 为准。
 
 ## 来源与许可
 
@@ -33,7 +33,14 @@ CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o dist/picbox ./cmd/picbox
 ```
 
 不想自己构建时，可以直接下载 [Releases](https://github.com/xyz0z0/PicBox/releases) 里的
-Linux amd64/arm64 压缩包（见下文「原生安装包」）。
+Linux amd64/arm64 压缩包（见下文「原生安装包」），或在 Linux 服务器上使用一键安装脚本：
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/xyz0z0/PicBox/main/scripts/install.sh | sudo bash
+```
+
+脚本会自动识别 `amd64` / `arm64` 架构、下载最新 Release 并校验 `SHA256SUMS`、创建 `picbox` 系统用户、
+初始化 `/var/lib/picbox` 并启动 systemd 服务（升级时加 `--upgrade` 参数）。
 
 打开 <http://127.0.0.1:3001>，选择「创建管理员」。默认只监听环回地址，先在可信环境完成首次建号。
 程序在当前目录的 `data/` 中创建 `picbox.sqlite`、认证密钥 `auth.key` 与图片；默认 Cookie 名为
@@ -198,7 +205,7 @@ PICBOX_DATA_DIR=/path/to/new-picbox-data ./dist/picbox
 在仓库根目录运行：
 
 ```sh
-./scripts/build-release.sh --version 0.0.1-dev.1
+./scripts/build-release.sh --version 0.1.0-dev.1
 ```
 
 输出位于 `dist/release/<version>/`，包含 Linux amd64、arm64 压缩包及 `SHA256SUMS`。
@@ -210,11 +217,11 @@ PICBOX_DATA_DIR=/path/to/new-picbox-data ./dist/picbox
 推送版本 tag 后，通过同一套完整检查才自动发布 GitHub Release。ARM64 当前仅交叉编译验收。
 
 发布前先提交并推送待发布源码、重建的 `frontend/dist` 和本工作流，确认 tag 去掉 `v` 后与
-`frontend/package.json` 的 `version` 完全一致。例如当前版本为 `0.0.1`：
+`frontend/package.json` 的 `version` 完全一致。例如当前版本为 `0.1.0`：
 
 ```sh
-git tag -a v0.0.1 -m "发布 PicBox 0.0.1"
-git push origin v0.0.1
+git tag -a v0.1.0 -m "发布 PicBox 0.1.0"
+git push origin v0.1.0
 ```
 
 任务成功后，到 [Releases](https://github.com/xyz0z0/PicBox/releases) 页面下载对应架构的 `.tar.gz` 与 `SHA256SUMS`；
@@ -297,7 +304,7 @@ go mod verify
 go vet ./...
 go test -race ./... -timeout 450s
 ./scripts/test-build-release.sh
-./scripts/build-release.sh --version 0.0.1-dev.1
+./scripts/build-release.sh --version 0.1.0-dev.1
 node scripts/test-web-v2.cjs
 ```
 
@@ -319,5 +326,5 @@ node scripts/test-web-v2.cjs
 - 缩略图仍为无损 WebP。
 - 反代限流默认按直连对端分桶；需配置 `TRUSTED_PROXIES` 才会按 `X-Forwarded-For`
   里的真实客户端分桶（`X-Real-IP` 不参与）。`IMAGE_ACCEL_REDIRECT_PREFIX` 一类反代直出未实现。
-- 远端仓库为 <https://github.com/xyz0z0/PicBox>；首版 `v0.0.1` 已于 2026-11-19 发布，
-  安装包见 [Releases](https://github.com/xyz0z0/PicBox/releases/tag/v0.0.1)。未做生产部署。
+- 远端仓库为 <https://github.com/xyz0z0/PicBox>；当前版本 `v0.1.0` 安装包见
+  [Releases](https://github.com/xyz0z0/PicBox/releases)。未做生产部署。
