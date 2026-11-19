@@ -1,0 +1,120 @@
+{
+  "image_id": "sha256:a7c12eec789c997f103b02b7db162f65e047a5af1ec7337d98182e08cd24cb12",
+  "docker_version": "29.9.3",
+  "timestamp_utc": "2026-11-17T03:45:06Z",
+  "memory_metric_note": "cgroup includes file cache; Docker stats may subtract cache. Peak excludes host OS.",
+  "cases": [
+    {
+      "memory_limit_mib": 256,
+      "cpu_limit": 1,
+      "swap_bytes": 0,
+      "startup_to_health_ms": 321,
+      "idle_cgroup_bytes": 4571136,
+      "kernel_cgroup_peak_bytes": 137039872,
+      "sampled_cgroup_peak_bytes": 136994816,
+      "final_cgroup_bytes": 136720384,
+      "docker_final_memory": "129.1MiB / 256MiB",
+      "oom_killed": false,
+      "fixture_timings": [
+        {
+          "fixture": "64x64-rgba",
+          "upload_ms": 6
+        },
+        {
+          "fixture": "4000x3000-rgba",
+          "upload_ms": 443
+        },
+        {
+          "fixture": "4000x4000-rgba",
+          "upload_ms": 636
+        }
+      ],
+      "burst_upload_statuses": [
+        200,
+        429,
+        429,
+        429
+      ],
+      "static_shell": {
+        "assets": 3,
+        "csp": "script-src 'self'",
+        "upload_max_bytes": 5242880
+      },
+      "export": {
+        "head_status": 200,
+        "archive_bytes": 404986
+      },
+      "ui_flows": [
+        "static-shell-and-assets",
+        "runtime-config",
+        "api-usage",
+        "api-tags",
+        "batch-visibility",
+        "export-head-and-zip",
+        "trash-list",
+        "restore-original",
+        "permanent-delete",
+        "change-password-keeps-session-and-keys",
+        "other-session-revoked",
+        "new-password-login"
+      ],
+      "result": "passed"
+    },
+    {
+      "memory_limit_mib": 512,
+      "cpu_limit": 1,
+      "swap_bytes": 0,
+      "startup_to_health_ms": 293,
+      "idle_cgroup_bytes": 4575232,
+      "kernel_cgroup_peak_bytes": 136331264,
+      "sampled_cgroup_peak_bytes": 136138752,
+      "final_cgroup_bytes": 133779456,
+      "docker_final_memory": "126.4MiB / 512MiB",
+      "oom_killed": false,
+      "fixture_timings": [
+        {
+          "fixture": "64x64-rgba",
+          "upload_ms": 5
+        },
+        {
+          "fixture": "4000x3000-rgba",
+          "upload_ms": 468
+        },
+        {
+          "fixture": "4000x4000-rgba",
+          "upload_ms": 604
+        }
+      ],
+      "burst_upload_statuses": [
+        429,
+        429,
+        429,
+        200
+      ],
+      "static_shell": {
+        "assets": 3,
+        "csp": "script-src 'self'",
+        "upload_max_bytes": 5242880
+      },
+      "export": {
+        "head_status": 200,
+        "archive_bytes": 404988
+      },
+      "ui_flows": [
+        "static-shell-and-assets",
+        "runtime-config",
+        "api-usage",
+        "api-tags",
+        "batch-visibility",
+        "export-head-and-zip",
+        "trash-list",
+        "restore-original",
+        "permanent-delete",
+        "change-password-keeps-session-and-keys",
+        "other-session-revoked",
+        "new-password-login"
+      ],
+      "result": "passed"
+    }
+  ]
+}

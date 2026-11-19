@@ -1,0 +1,4 @@
+# frontend/dist is committed on purpose: the Go binary embeds it
+# (frontend/embed.go) and the release pipeline must build without Node.
+# Dependencies stay ignored by the repository root .gitignore.
+node_modules/

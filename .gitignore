@@ -1,0 +1,31 @@
+# Release packages written by scripts/build-release.sh (dist/release/<version>/).
+/dist/
+
+# Runtime data: SQLite database, auth.key, uploaded originals/thumbnails and the
+# purge staging directory. Never commit any of it.
+/data/
+
+# Real environment files may contain JWT_SECRET / SMTP_PASSWORD. The template
+# .env.example is committed on purpose.
+.env
+.env.*
+!.env.example
+
+# Frontend dependencies. frontend/dist is NOT ignored: it is embedded into the
+# Go binary and must stay committed (see frontend/README.md).
+node_modules/
+
+# Python caches and local records from scripts/test-resources.py.
+__pycache__/
+*.pyc
+/resource-results*.json
+
+# Local SQLite side files (WAL/journal) if a data directory is ever nested here.
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+auth.key
+
+# Editor and OS noise.
+.DS_Store

@@ -1,0 +1,26 @@
+{
+  "name": "picbox-frontend",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "PicBox browser UI: static React bundle embedded in the Go single binary",
+  "scripts": {
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "check:dist": "node scripts/check-dist.mjs",
+    "verify": "tsc --noEmit && vitest run && vite build && node scripts/check-dist.mjs",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "jsdom": "31.0.1",
+    "typescript": "7.0.2",
+    "vite": "7.3.8",
+    "vitest": "5.1.0"
+  }
+}

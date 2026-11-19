@@ -1,0 +1,29 @@
+[Unit]
+Description=PicBox self-hosted image service
+After=network.target
+
+[Service]
+Type=simple
+User=picbox
+Group=picbox
+StateDirectory=picbox
+StateDirectoryMode=0700
+WorkingDirectory=/var/lib/picbox
+Environment=PICBOX_ADDR=127.0.0.1:3001
+Environment=PICBOX_DATA_DIR=/var/lib/picbox
+# 只信任环回反代（本机 Nginx）。不配置时忽略所有转发头，反代后面所有客户端
+# 会共用同一个限流桶；要让限流按真实客户端分桶，代理必须正确设置 X-Forwarded-For。
+Environment=TRUSTED_PROXIES=127.0.0.1/32,::1/128
+EnvironmentFile=-/etc/picbox.env
+ExecStart=/usr/local/bin/picbox
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=15
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

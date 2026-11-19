@@ -1,0 +1,247 @@
+/* ── Layout ── */
+.ip-root {
+  background: var(--ph-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.ip-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--ph-header-bg);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--ph-border);
+  padding: 0 24px;
+  height: 62px;
+  display: flex;
+  align-items: center;
+}
+
+.ip-logo {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ph-primary);
+  letter-spacing: -0.3px;
+}
+
+.ip-main {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px 60px;
+}
+
+/* ── Card ── */
+.ip-card {
+  background: var(--ph-surface);
+  border: 1px solid var(--ph-border);
+  border-radius: 2px;
+  box-shadow: var(--ph-mat-shadow);
+  overflow: hidden;
+  width: 100%;
+  max-width: 880px;
+}
+
+/* ── Image area ── */
+.ip-image-wrap {
+  background: var(--ph-mat);
+  padding: clamp(16px, 3vw, 36px);
+  border-bottom: 1px solid var(--ph-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  max-height: 640px;
+  overflow: hidden;
+}
+
+.ip-image-wrap a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.ip-image {
+  max-width: 100%;
+  max-height: 568px;
+  object-fit: contain;
+  display: block;
+  cursor: zoom-in;
+  background-color: var(--ph-surface-muted);
+  background-image:
+    linear-gradient(45deg, rgb(128 128 128 / 8%) 25%, transparent 25%),
+    linear-gradient(-45deg, rgb(128 128 128 / 8%) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgb(128 128 128 / 8%) 75%),
+    linear-gradient(-45deg, transparent 75%, rgb(128 128 128 / 8%) 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  border: 1px solid var(--ph-border);
+  transition: opacity 0.15s;
+}
+
+.ip-image:hover {
+  opacity: 0.9;
+}
+
+/* ── Info panel ── */
+.ip-info {
+  padding: 24px 28px 28px;
+}
+
+.ip-filename {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ph-text);
+  margin: 0 0 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ip-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ip-tag {
+  background: var(--ph-primary-soft);
+  color: var(--ph-primary-strong);
+  font-size: 12.5px;
+  padding: 3px 10px;
+  border: 1px solid var(--ph-border);
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+/* ── Action buttons ── */
+.copy-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 2px;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--ph-primary);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s, transform 0.1s;
+  background: var(--ph-primary);
+  color: var(--ph-primary-fg);
+}
+
+.copy-btn:hover {
+  background: var(--ph-primary-strong);
+  transform: translateY(-1px);
+}
+
+.copy-btn:active {
+  transform: translateY(0);
+}
+
+.copy-btn.copied {
+  background: var(--ph-success);
+  border-color: var(--ph-success);
+  color: #fff;
+}
+
+.copy-btn.secondary {
+  background: var(--ph-surface-muted);
+  border-color: var(--ph-border);
+  color: var(--ph-text-soft-strong);
+}
+
+.copy-btn.secondary:hover {
+  background: var(--ph-border);
+}
+
+.copy-btn.secondary.copied {
+  background: var(--ph-success-soft);
+  color: var(--ph-success);
+}
+
+.copy-btn.outline {
+  background: transparent;
+  color: var(--ph-muted);
+  border: 1px solid var(--ph-border);
+}
+
+.copy-btn.outline:hover {
+  background: var(--ph-surface-muted);
+  color: var(--ph-text-soft-strong);
+}
+
+/* ── Navigation / tags ── */
+.ip-header {
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ip-back {
+  font-size: 13px;
+  color: var(--ph-muted);
+  text-decoration: none;
+}
+
+.ip-back:hover {
+  color: var(--ph-primary);
+}
+
+.ip-tags {
+  margin-top: -8px;
+}
+
+.ip-hidden-note {
+  margin: 0 0 16px;
+  padding: 8px 12px;
+  border-radius: 2px;
+  border: 1px solid var(--ph-warning-border);
+  background: var(--ph-warning-soft);
+  color: var(--ph-warning-text);
+  font-size: 13px;
+}
+
+.copy-feedback {
+  min-height: 18px;
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--ph-danger-strong);
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .ip-main {
+    padding: 20px 8px 40px;
+  }
+  .ip-card {
+    border-radius: 2px;
+  }
+  .ip-info {
+    padding: 16px 16px 20px;
+  }
+  .ip-filename {
+    font-size: 15px;
+  }
+  .copy-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .copy-btn {
+    justify-content: center;
+    padding: 7px 14px;
+    font-size: 13px;
+  }
+}

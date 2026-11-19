@@ -1,0 +1,286 @@
+name: Go CI
+
+# PicBox 独立 pipeline：构建、测试、打包整个仓库（Go 后端 + 内嵌静态前端）。
+# - 生产运行不需要 Node/pnpm。CI 在构建 Go 之前安装 Node 24 + pnpm 10，仅用于重建并校验
+#   静态前端产物（frontend/dist，Go 二进制的嵌入内容）；同时运行前端离线行为测试
+#   （jsdom，不需要浏览器）。
+# - 分支/PR 只有读取权限并保留 workflow artifact；合法版本 tag 在完整验证后发布 GitHub Release。
+# - 安装步骤（sudo/systemctl）不在这里执行，只出现在包内 INSTALL.md 里由管理员手工操作。
+# - 触发范围覆盖整个仓库内容以及本文件；workflow_dispatch 提供手动入口。
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "cmd/**"
+      - "internal/**"
+      - "frontend/**"
+      - "deploy/**"
+      - "scripts/**"
+      - "testdata/**"
+      - "go.mod"
+      - "go.sum"
+      - "LICENSE"
+      - "THIRD_PARTY_NOTICES.md"
+      - ".github/workflows/go.yml"
+    tags:
+      - "v*"
+  pull_request:
+    paths:
+      - "cmd/**"
+      - "internal/**"
+      - "frontend/**"
+      - "deploy/**"
+      - "scripts/**"
+      - "testdata/**"
+      - "go.mod"
+      - "go.sum"
+      - "LICENSE"
+      - "THIRD_PARTY_NOTICES.md"
+      - ".github/workflows/go.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: go-ci-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+defaults:
+  run:
+    working-directory: .
+
+env:
+  # 普通 CI 使用占位版本；tag 事件由首个步骤校验并覆盖 RELEASE_VERSION。
+  RELEASE_VERSION: 0.0.0-ci.${{ github.run_number }}
+
+jobs:
+  verify-and-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      artifact-id: ${{ steps.upload-release-artifacts.outputs.artifact-id }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # Tag 名作为不可信输入经环境变量传入，不插入 shell 源码。先校验语法及
+      # frontend/package.json 版本，确保非法/不匹配的 tag 不会触发构建。
+      - name: Validate release tag
+        id: validate_release_tag
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if [[ "$RELEASE_TAG" != v* ]]; then
+            echo "::error::发布 tag 必须以 v 开头，例如 v1.2.3"
+            exit 1
+          fi
+          version="${RELEASE_TAG#v}"
+          if [ "${#RELEASE_TAG}" -gt 64 ] || ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z]+([.-][0-9A-Za-z]+)*)?$ ]]; then
+            echo "::error::非法发布 tag '$RELEASE_TAG'；格式应为 v1.2.3 或 v1.2.3-rc.1"
+            exit 1
+          fi
+          package_version="$(node -p "require('./frontend/package.json').version")"
+          if [ "$version" != "$package_version" ]; then
+            echo "::error::tag 版本 $version 与 frontend/package.json 版本 $package_version 不一致"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      # 静态前端产物是二进制的一部分（frontend/embed.go）。CI 重建后与提交的
+      # dist/ 逐字节比对：改动 frontend/app、frontend/lib、frontend/src 或
+      # frontend/package.json（页脚版本）后忘记重建，发布包就会带着陈旧 UI，
+      # 而 Go 编译本身看不出这个问题。
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Set release package version
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          VALIDATED_VERSION: ${{ steps.validate_release_tag.outputs.version }}
+        run: echo "RELEASE_VERSION=$VALIDATED_VERSION" >> "$GITHUB_ENV"
+
+      # 只安装前端自己的依赖；Go 构建不需要它们之外的任何 Node 包。
+      - name: Install frontend dependencies (frozen)
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      # typecheck + 离线行为测试（Vitest + jsdom，不启动浏览器）+ 重建 + 产物断言。
+      - name: Typecheck, test and rebuild frontend bundle
+        working-directory: frontend
+        run: pnpm run verify
+
+      # 未跟踪的新哈希文件同样算“产物未提交”，所以检查 --untracked-files=all 的输出，
+      # 而不是只看 git diff。
+      - name: Verify committed frontend bundle is current
+        working-directory: .
+        run: |
+          set -euo pipefail
+          status="$(git status --porcelain --untracked-files=all -- frontend/dist)"
+          if [ -n "$status" ]; then
+            echo "::error::前端产物与源码不一致：请在本地运行 (cd frontend && pnpm verify) 并提交 dist/"
+            printf '%s\n' "$status"
+            exit 1
+          fi
+          git diff --exit-code -- frontend/dist
+
+      # Go 版本直接来自 go.mod（go-version-file 相对仓库根目录解析），
+      # 避免在 workflow 里再维护一份版本号。
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Show toolchain
+        run: go version
+
+      # 打包脚本只用 bash 内置与 GNU 工具，先做语法校验，避免 shell 语法错误拖到打包步骤才暴露。
+      - name: Shell syntax check
+        run: bash -n scripts/build-release.sh
+
+      - name: go mod verify
+        run: go mod verify
+
+      - name: go vet
+        run: go vet ./...
+
+      # Go 代码包含 SQLite（modernc）与图片处理，-race 只在 amd64 上运行。
+      - name: go test -race
+        run: go test -race ./... -timeout 450s
+
+      # 路径边界与版本号的轻量回归：只在 mktemp 沙箱里验证“构建前拒绝”
+      # （符号链接绕过 data/仓库外、非法版本号），不跑 go build，也不碰真实 data/。
+      - name: Regression build-release path and version guards
+        run: ./scripts/test-build-release.sh
+
+      - name: Build release packages
+        run: ./scripts/build-release.sh --version "$RELEASE_VERSION"
+
+      - name: Verify checksums and static binaries
+        run: |
+          set -euo pipefail
+          release_dir="dist/release/${RELEASE_VERSION}"
+          cd "$release_dir"
+          sha256sum -c SHA256SUMS
+          extracted="$RUNNER_TEMP/picbox-extract"
+          rm -rf "$extracted"
+          mkdir -p "$extracted"
+          for arch in amd64 arm64; do
+            tar -xzf "picbox_${RELEASE_VERSION}_linux_${arch}.tar.gz" -C "$extracted"
+            dir="$extracted/picbox_${RELEASE_VERSION}_linux_${arch}"
+            for f in picbox picbox.service INSTALL.md LICENSE THIRD_PARTY_NOTICES.md; do
+              [ -f "$dir/$f" ] || { echo "::error::缺少 $arch 包内文件 $f"; exit 1; }
+            done
+            cmp "$GITHUB_WORKSPACE/LICENSE" "$dir/LICENSE" \
+              || { echo "::error::$arch 包内 LICENSE 与仓库文件不一致"; exit 1; }
+            cmp "$GITHUB_WORKSPACE/THIRD_PARTY_NOTICES.md" "$dir/THIRD_PARTY_NOTICES.md" \
+              || { echo "::error::$arch 包内 THIRD_PARTY_NOTICES.md 与仓库文件不一致"; exit 1; }
+            if command -v file >/dev/null 2>&1; then
+              file -b "$dir/picbox"
+              file -b "$dir/picbox" | grep -q 'statically linked' \
+                || { echo "::error::$arch 二进制不是静态链接"; exit 1; }
+            fi
+          done
+
+      # 解包后的 amd64 产物在临时目录中真实启动一次：--version 不得创建数据目录，
+      # /api/health 必须返回 ok。arm64 只在构建机交叉编译，不在 CI 运行。
+      - name: Smoke test packaged amd64 binary
+        run: |
+          set -euo pipefail
+          bin_dir="$RUNNER_TEMP/picbox-extract/picbox_${RELEASE_VERSION}_linux_amd64"
+          bin="$bin_dir/picbox"
+          work="$RUNNER_TEMP/picbox-smoke"
+          rm -rf "$work"
+          mkdir -p "$work"
+
+          (cd "$work" && "$bin" --version)
+          if [ -e "$work/data" ]; then
+            echo "::error::--version 不应创建 data 目录"
+            exit 1
+          fi
+
+          cd "$work"
+          PICBOX_ADDR=127.0.0.1:38201 PICBOX_DATA_DIR="$work/data" "$bin" >server.log 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+
+          healthy=0
+          for _ in $(seq 1 40); do
+            if curl -fsS -m 1 http://127.0.0.1:38201/api/health | grep -q '"ok":true'; then
+              healthy=1
+              break
+            fi
+            sleep 0.25
+          done
+          if [ "$healthy" -ne 1 ]; then
+            echo "::error::打包产物启动后 /api/health 未就绪"
+            cat server.log
+            exit 1
+          fi
+          echo "health ok"
+
+          kill "$pid" 2>/dev/null || true
+          wait "$pid" 2>/dev/null || true
+
+      # 上传 workflow artifact；tag 发布 job 只会在本 job 全部验证成功后读取它。
+      - name: Upload Go release artifacts
+        id: upload-release-artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: picbox-release-${{ github.run_id }}-${{ github.run_attempt }}
+          path: dist/release/${{ env.RELEASE_VERSION }}
+          if-no-files-found: error
+          retention-days: 7
+
+  publish-release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    needs: verify-and-package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download verified release packages
+        uses: actions/download-artifact@v8
+        with:
+          artifact-ids: ${{ needs.verify-and-package.outputs.artifact-id }}
+          path: release
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="${RELEASE_TAG#v}"
+          expected=("picbox_${version}_linux_amd64.tar.gz" "picbox_${version}_linux_arm64.tar.gz" "SHA256SUMS")
+          actual=(release/*)
+          if [ "${#actual[@]}" -ne 3 ]; then
+            echo "::error::验证产物清单不正确：期望恰好 3 个发布文件"
+            exit 1
+          fi
+          for file in "${expected[@]}"; do
+            [ -f "release/$file" ] || { echo "::error::缺少发布文件 $file"; exit 1; }
+          done
+          (cd release && sha256sum -c SHA256SUMS)
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "::error::Release $RELEASE_TAG 已存在；请人工处理后再重新运行"
+            exit 1
+          fi
+          args=("$RELEASE_TAG" --verify-tag "release/${expected[0]}" "release/${expected[1]}" release/SHA256SUMS --title "$RELEASE_TAG" --notes "PicBox $RELEASE_TAG")
+          prerelease_version="${version%%+*}"
+          if [[ "$prerelease_version" == *-* ]]; then
+            args+=(--prerelease)
+          fi
+          gh release create "${args[@]}"
